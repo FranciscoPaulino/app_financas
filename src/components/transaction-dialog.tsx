@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { CATEGORIES } from "@/lib/categories"
-import type { Transaction, TransactionType } from "@/lib/transactions"
+import { formatInputBRL, parseBRL, type Transaction, type TransactionType } from "@/lib/transactions"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -36,7 +36,7 @@ export function TransactionDialog({
 
 function TransactionForm({ transaction, onDone }: { transaction: Transaction | null; onDone: () => void }) {
   const [description, setDescription] = useState(transaction?.description ?? "")
-  const [amount, setAmount] = useState(transaction ? String(transaction.amount) : "")
+  const [amount, setAmount] = useState(transaction ? formatInputBRL(transaction.amount) : "")
   const [date, setDate] = useState(transaction?.date ?? today())
   const [type, setType] = useState<TransactionType>(transaction?.type ?? "despesa")
   const [category, setCategory] = useState<string>(transaction?.category ?? "Outros")
@@ -45,7 +45,7 @@ function TransactionForm({ transaction, onDone }: { transaction: Transaction | n
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
-    const value = Number(amount.replace(",", "."))
+    const value = parseBRL(amount)
     if (!description.trim() || !(value > 0)) {
       setError("Informe uma descrição e um valor maior que zero.")
       return
@@ -86,7 +86,7 @@ function TransactionForm({ transaction, onDone }: { transaction: Transaction | n
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="amount">Valor (R$)</Label>
-          <Input id="amount" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+          <Input id="amount" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))} required />
         </div>
         <div className="space-y-2">
           <Label htmlFor="date">Data</Label>

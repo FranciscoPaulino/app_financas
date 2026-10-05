@@ -12,6 +12,15 @@ export type Transaction = {
 export const brl = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 
+/** Converte texto pt-BR ("1.234,56") em número. Retorna NaN se inválido. */
+export function parseBRL(text: string) {
+  const clean = text.trim().replace(/\./g, "").replace(",", ".")
+  return /^\d+(\.\d{1,2})?$/.test(clean) ? Number(clean) : NaN
+}
+
+export const formatInputBRL = (value: number) =>
+  value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
 export const formatDate = (iso: string) => {
   const [y, m, d] = iso.split("-")
   return `${d}/${m}/${y}`
