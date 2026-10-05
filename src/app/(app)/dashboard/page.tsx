@@ -16,13 +16,15 @@ export default function DashboardPage() {
 
   const { income, expense, balance } = useMemo(() => summarize(data), [data])
 
-  const byCategory = useMemo(() => {
+  const groupBy = (type: "receita" | "despesa") => {
     const map = new Map<string, number>()
     data
-      .filter((t) => t.type === "despesa")
+      .filter((t) => t.type === type)
       .forEach((t) => map.set(t.category, (map.get(t.category) ?? 0) + t.amount))
     return [...map].map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
-  }, [data])
+  }
+  const expensesByCategory = useMemo(() => groupBy("despesa"), [data]) // eslint-disable-line react-hooks/exhaustive-deps
+  const incomeByCategory = useMemo(() => groupBy("receita"), [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const cards = [
     { title: "Receitas", value: income, icon: ArrowUpCircle, color: "text-income" },
@@ -53,45 +55,10 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Despesas por categoria</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {byCategory.length === 0 ? (
-              <p className="py-16 text-center text-sm text-muted-foreground">Sem despesas neste mês.</p>
-            ) : (
-              <>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={byCategory} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
-                        {byCategory.map((c) => (
-                          <Cell key={c.name} fill={CATEGORY_COLORS[c.name] ?? "#64748b"} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v) => brl(Number(v))} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {byCategory.map((c) => (
-                    <li key={c.name} className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <span className="h-3 w-3 rounded-full" style={{ background: CATEGORY_COLORS[c.name] ?? "#64748b" }} />
-                        {c.name}
-                      </span>
-                      <span className="text-muted-foreground">{brl(c.value)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2">
+        <CategoryCard title="Despesas por categoria" empty="Sem despesas neste mês." items={expensesByCategory} />
+        <CategoryCard title="Receitas por categoria" empty="Sem receitas neste mês." items={incomeByCategory} />
+        <Card className="md:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <CardTitle>Últimas transações</CardTitle>
             <Link href="/transacoes" className="text-sm font-medium text-primary hover:underline">
@@ -122,5 +89,54 @@ export default function DashboardPage() {
         </Card>
       </div>
     </>
+  )
+}
+
+function CategoryCard({
+  title,
+  empty,
+  items,
+}: {
+  title: string
+  empty: string
+  items: { name: string; value: number }[]
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? (
+          <p className="py-16 text-center text-sm text-muted-foreground">{empty}</p>
+        ) : (
+          <>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={items} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+                    {items.map((c) => (
+                      <Cell key={c.name} fill={CATEGORY_COLORS[c.name] ?? "#64748b"} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v) => brl(Number(v))} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <ul className="mt-2 space-y-1 text-sm">
+              {items.map((c) => (
+                <li key={c.name} className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <span className="h-3 w-3 rounded-full" style={{ background: CATEGORY_COLORS[c.name] ?? "#64748b" }} />
+                    {c.name}
+                  </span>
+                  <span className="text-muted-foreground">{brl(c.value)}</span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </CardContent>
+    </Card>
   )
 }

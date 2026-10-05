@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { BarChart3, Download, Filter, ShieldCheck, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const features = [
   { icon: BarChart3, title: "Dashboard visual", text: "Receitas, despesas e saldo do mês, com gráfico por categoria." },
@@ -16,7 +17,8 @@ export default function Home() {
         <span className="flex items-center gap-2 font-semibold">
           <Wallet className="h-6 w-6 text-primary" /> Finanças
         </span>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Button variant="ghost" asChild><Link href="/login">Entrar</Link></Button>
           <Button asChild><Link href="/cadastro">Começar</Link></Button>
         </div>
